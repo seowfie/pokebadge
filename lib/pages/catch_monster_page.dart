@@ -84,7 +84,7 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
   Future<void> _triggerAudioAndTorch() async {
     final player = AudioPlayer();
     try {
-      await player.play(AssetSource('sounds/alarm.ogg'));
+      await player.play(AssetSource('sounds/monster_alarm.wav'));
     } catch (e) {
       debugPrint("Audio error: $e");
     }
@@ -111,33 +111,48 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
   }
 
   void _performCatch(Monster monster) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("You caught ${monster.monsterName}!")),
-    );
-    setState(() {
-      _monsters.removeWhere((m) => m.monsterId == monster.monsterId);
-    });
-
     _triggerAudioAndTorch();
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final playerId = prefs.getString('player_id') ?? '1';
       
-      final caughtList = prefs.getStringList('caught_monsters') ?? [];
-      if (!caughtList.contains(monster.monsterId.toString())) {
-        caughtList.add(monster.monsterId.toString());
-        await prefs.setStringList('caught_monsters', caughtList);
-      }
-      
-      await ApiService.addMonsterCatch(
+      final response = await ApiService.addMonsterCatch(
         playerId: playerId,
         monsterId: monster.monsterId.toString(),
         locationId: '1',
         latitude: _currentLocation!.latitude,
         longitude: _currentLocation!.longitude,
       );
+
+      if (response['success'] == true || response['status'] == 'success') {
+        final caughtList = prefs.getStringList('caught_monsters') ?? [];
+        if (!caughtList.contains(monster.monsterId.toString())) {
+          caughtList.add(monster.monsterId.toString());
+          await prefs.setStringList('caught_monsters', caughtList);
+        }
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("You caught ${monster.monsterName}!")),
+          );
+          setState(() {
+            _monsters.removeWhere((m) => m.monsterId == monster.monsterId);
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to save catch: ${response['message'] ?? response['error']}")),
+          );
+        }
+      }
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Network Error: Could not save catch to server.")),
+        );
+      }
       debugPrint("Failed to save catch: $e");
     }
   }

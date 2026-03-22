@@ -26,9 +26,17 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text.trim(),
       );
       // Depending on API response structure, usually checks for success or player_id
-      if (res['success'] == true || res['status'] == 'success' || (res.containsKey('player_id'))) {
+      if (res['success'] == true || res['status'] == 'success') {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('player_id', res['player_id']?.toString() ?? '1');
+        
+        String assignedPlayerId = '1';
+        if (res.containsKey('data') && res['data']['player_id'] != null) {
+          assignedPlayerId = res['data']['player_id'].toString();
+        } else if (res.containsKey('player_id')) {
+          assignedPlayerId = res['player_id'].toString();
+        }
+        
+        await prefs.setString('player_id', assignedPlayerId);
         await prefs.setString('username', _usernameController.text.trim());
         if (!mounted) return;
         Navigator.pushReplacement(

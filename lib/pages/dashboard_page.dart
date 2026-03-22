@@ -7,6 +7,7 @@ import 'edit_monsters_page.dart';
 import 'delete_monster_page.dart';
 import 'manage_users_page.dart';
 import 'login_page.dart';
+import 'my_monsters_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -103,6 +104,14 @@ class DashboardPage extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.pets),
+              title: const Text("My Caught Monsters"),
+              onTap: () {
+                Navigator.pop(context);
+                _open(context, const MyMonstersPage());
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.map),
               title: const Text("Show Monster Map"),
               onTap: () {
@@ -180,6 +189,11 @@ class DashboardPage extends StatelessWidget {
                     icon: Icons.catching_pokemon,
                     label: "Catch Monsters",
                     onTap: () => _open(context, const CatchMonsterPage()),
+                  ),
+                  _DashboardCard(
+                    icon: Icons.pets,
+                    label: "My Caught Monsters",
+                    onTap: () => _open(context, const MyMonstersPage()),
                   ),
                   _DashboardCard(
                     icon: Icons.edit,

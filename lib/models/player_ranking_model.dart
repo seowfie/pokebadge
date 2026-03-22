@@ -12,7 +12,7 @@ class PlayerRanking {
   factory PlayerRanking.fromJson(Map<String, dynamic> json) {
     return PlayerRanking(
       playerName: json['player_name'] ?? json['username'] ?? 'Unknown Hunter',
-      totalCaught: int.tryParse(json['total_caught']?.toString() ?? '0') ?? 0,
+      totalCaught: int.tryParse(json['total_catches']?.toString() ?? '0') ?? 0,
       data: json,
     );
   }

@@ -191,7 +191,7 @@ class ApiService {
   //FOR YOUR TOP MONSTER HUNTERS
   static Future<Map<String, dynamic>> getTopHunters() async {
     final response = await http.get(
-      Uri.parse("$baseUrl/top_monter_hunters.php"),
+      Uri.parse("$baseUrl/top_monster_hunters.php"),
     );
     return jsonDecode(response.body);
   }
