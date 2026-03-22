@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/dashboard_page.dart';
+import 'pages/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +11,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(0.85)),
+          child: child!,
+        );
+      },
       debugShowCheckedModeBanner: false,
       title: 'HAU Monsters',
       theme: ThemeData(
@@ -83,7 +89,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const DashboardPage(),
+      home: const LoginPage(),
     );
   }
 }

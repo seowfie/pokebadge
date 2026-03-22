@@ -5,6 +5,9 @@ import 'map_page.dart';
 import 'catch_monster_page.dart';
 import 'edit_monsters_page.dart';
 import 'delete_monster_page.dart';
+import 'manage_users_page.dart';
+import 'login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -76,6 +79,14 @@ class DashboardPage extends StatelessWidget {
               ],
             ),
             ListTile(
+              leading: const Icon(Icons.manage_accounts),
+              title: const Text("Manage Account"),
+              onTap: () {
+                Navigator.pop(context);
+                _open(context, const ManageUsersPage());
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.list_alt),
               title: const Text("View Top Monster Hunters"),
               onTap: () {
@@ -97,6 +108,20 @@ class DashboardPage extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 _open(context, const MapPage());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text("Logout"),
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
               },
             ),
           ],
@@ -170,6 +195,11 @@ class DashboardPage extends StatelessWidget {
                     icon: Icons.list_alt,
                     label: "View Top Monster Hunters",
                     onTap: () => _open(context, const MonsterListPage()),
+                  ),
+                  _DashboardCard(
+                    icon: Icons.manage_accounts,
+                    label: "Manage Account",
+                    onTap: () => _open(context, const ManageUsersPage()),
                   ),
                   _DashboardCard(
                     icon: Icons.map,

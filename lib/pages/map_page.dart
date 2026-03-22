@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/monster_model.dart';
 import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -35,10 +36,12 @@ class _MapPageState extends State<MapPage> {
       }
 
       final monsters = await ApiService.getMonsters();
+      final prefs = await SharedPreferences.getInstance();
+      final caughtList = prefs.getStringList('caught_monsters') ?? [];
 
       if (mounted) {
         setState(() {
-          _monsters = monsters;
+          _monsters = monsters.where((m) => !caughtList.contains(m.monsterId.toString())).toList();
           _isLoading = false;
         });
       }

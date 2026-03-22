@@ -136,4 +136,63 @@ class ApiService {
     }
     return jsonDecode(response.body);
   }
+
+  // FOR YOUR USER REGISTRATION
+  static Future<Map<String, dynamic>> register(
+      String playerName, String username, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/register.php"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "player_name": playerName,
+        "username": username,
+        "password": password,
+      }),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // FOR YOUR LOGIN
+  static Future<Map<String, dynamic>> login(
+      String username, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/login.php"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "username": username,
+        "password": password,
+      }),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // FOR YOUR MONSTER CATCHES
+  static Future<Map<String, dynamic>> addMonsterCatch({
+    required String playerId,
+    required String monsterId,
+    required String locationId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/add_monster_catch.php"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "player_id": playerId,
+        "monster_id": monsterId,
+        "location_id": locationId,
+        "latitude": latitude,
+        "longitude": longitude,
+      }),
+    );
+    return jsonDecode(response.body);
+  }
+
+  //FOR YOUR TOP MONSTER HUNTERS
+  static Future<Map<String, dynamic>> getTopHunters() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/top_monter_hunters.php"),
+    );
+    return jsonDecode(response.body);
+  }
 }
