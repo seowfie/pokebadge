@@ -251,8 +251,8 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
           final locName = _matchedLocation!['location_name'] ?? 'Unknown Location';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Caught ${monster.monsterName} at $locName!"),
-              backgroundColor: const Color(0xFF386641),
+              content: Text("Caught ${monster.monsterName} at $locName!", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFF9C27B0),
               duration: const Duration(seconds: 3),
             ),
           );
@@ -290,8 +290,9 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
       margin: const EdgeInsets.only(top: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5EB),
+        color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF00E5FF), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,34 +302,43 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF386641),
+              color: Color(0xFF00E5FF),
             ),
           ),
           const SizedBox(height: 12),
           Text(
             "${_detectedMonster!.monsterName} (${_detectedMonster!.monsterType}) - $distanceStr",
-            style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 6),
           Text(
             "Location - $locName",
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
+            style: const TextStyle(fontSize: 14, color: Colors.white70),
           ),
           const SizedBox(height: 24),
           Center(
-            child: OutlinedButton.icon(
-              onPressed: () => _performCatch(_detectedMonster!),
-              icon: const Icon(Icons.catching_pokemon, color: Color(0xFF386641)),
-              label: const Text(
-                "Catch Monster",
-                style: TextStyle(color: Color(0xFF386641), fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF386641), width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF9C27B0), Color(0xFFFF4081)],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () => _performCatch(_detectedMonster!),
+                icon: const Icon(Icons.catching_pokemon, color: Colors.white),
+                label: const Text(
+                  "Catch Monster",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
               ),
             ),
           ),
@@ -340,12 +350,12 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFDF6),
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text("Catch Monsters", style: TextStyle(color: Colors.black87)),
+        title: const Text("Catch Monsters", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -454,77 +464,95 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
                       ),
                       TextField(
                         controller: _latController,
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "- Your Latitude -",
-                          labelStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 14),
+                          labelStyle: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14),
                           floatingLabelBehavior: FloatingLabelBehavior.always,
-                          border: OutlineInputBorder(),
-                          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF386641), width: 2)),
-                          prefixIcon: Icon(Icons.my_location, color: Colors.black87),
+                          border: const OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade800)),
+                          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF00E5FF), width: 2)),
+                          prefixIcon: const Icon(Icons.my_location, color: Colors.white70),
                         ),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 24),
                       TextField(
                         controller: _lngController,
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: "- Your Longitude -",
-                          labelStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 14),
+                          labelStyle: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14),
                           floatingLabelBehavior: FloatingLabelBehavior.always,
-                          border: OutlineInputBorder(),
-                          focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF386641), width: 2)),
-                          prefixIcon: Icon(Icons.explore, color: Colors.black87),
+                          border: const OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade800)),
+                          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Color(0xFF00E5FF), width: 2)),
+                          prefixIcon: const Icon(Icons.explore, color: Colors.white70),
                         ),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC8E6C9),
+                          color: const Color(0xFF1E1E1E),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFFF4081).withOpacity(0.5)),
                         ),
                         child: Text(
                           "Current matched location: ${_matchedLocation?['location_name'] ?? 'None'}",
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Colors.white,
                           ),
                         ),
                       ),
                       const SizedBox(height: 24),
                       if (_detecting)
-                        ElevatedButton.icon(
-                          onPressed: null,
-                          icon: const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            color: const Color(0xFF1E1E1E),
+                            border: Border.all(color: Colors.grey.shade800),
                           ),
-                          label: const Text("Detecting..."),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey.shade300,
-                            foregroundColor: Colors.grey.shade600,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                            elevation: 0,
+                          child: ElevatedButton.icon(
+                            onPressed: null,
+                            icon: const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00E5FF)),
+                            ),
+                            label: const Text("Detecting...", style: TextStyle(color: Colors.white70)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                            ),
                           ),
                         )
                       else
-                        ElevatedButton.icon(
-                          onPressed: _detectMonsters,
-                          icon: const Icon(Icons.radar, color: Colors.white),
-                          label: const Text(
-                            "Detect Monsters",
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00E5FF), Color(0xFF9C27B0)],
+                            ),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF386641),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                          child: ElevatedButton.icon(
+                            onPressed: _detectMonsters,
+                            icon: const Icon(Icons.radar, color: Colors.white),
+                            label: const Text(
+                              "Detect Monsters",
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                            ),
                           ),
                         ),
                       _buildDetectionResult(),
