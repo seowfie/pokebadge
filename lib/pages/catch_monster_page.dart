@@ -17,8 +17,8 @@ class CatchMonsterPage extends StatefulWidget {
 
 class _CatchMonsterPageState extends State<CatchMonsterPage> {
   // Set default coordinates to Holy Angel University
-  final TextEditingController _latController = TextEditingController(text: "15.144985");
-  final TextEditingController _lngController = TextEditingController(text: "120.588702");
+  final TextEditingController _latController = TextEditingController(text: "15.133103");
+  final TextEditingController _lngController = TextEditingController(text: "120.590585");
   final MapController _mapController = MapController();
   
   List<Monster> _monsters = [];
@@ -32,6 +32,24 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
   double? _detectedMonsterDistance;
   
   Map<String, dynamic>? _matchedLocation;
+
+  // HAU building zones — each has a 40m radius and 4 sub-spawn spots
+  static const List<Map<String, dynamic>> _buildings = [
+    {'name': 'St. Martha Hall', 'lat': 15.133576, 'lng': 120.591420},
+    {'name': 'SFJ',             'lat': 15.133271, 'lng': 120.591094},
+    {'name': 'STL',             'lat': 15.132660, 'lng': 120.590788},
+    {'name': 'PGN',             'lat': 15.132654, 'lng': 120.590263},
+    {'name': 'APS',             'lat': 15.131826, 'lng': 120.589936},
+    {'name': 'MGN',             'lat': 15.133208, 'lng': 120.589979},
+    {'name': 'SJH',             'lat': 15.132701, 'lng': 120.589073},
+    {'name': 'CHAPEL',          'lat': 15.132142, 'lng': 120.589501},
+    {'name': 'GGN',             'lat': 15.131748, 'lng': 120.590675},
+    {'name': 'Covered Court',   'lat': 15.131412, 'lng': 120.589191},
+  ];
+
+  // 10m offset in degrees (approx at this latitude)
+  static const double _latOffset = 0.00009;   // ~10m N/S
+  static const double _lngOffset = 0.0000932; // ~10m E/W
 
   @override
   void initState() {
@@ -82,35 +100,37 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
   }
 
   void _updateMatchedLocation() {
-    if (_locations.isEmpty) return;
-    
     final lat = double.tryParse(_latController.text.trim());
     final lng = double.tryParse(_lngController.text.trim());
-    
+
     if (lat == null || lng == null) {
       if (mounted) setState(() => _matchedLocation = null);
       return;
     }
 
-    Map<String, dynamic>? closest;
-    double minDistance = double.infinity;
+    Map<String, dynamic>? matched;
 
-    for (var loc in _locations) {
-      final locLat = double.tryParse(loc['center_latitude'].toString()) ?? 0.0;
-      final locLng = double.tryParse(loc['center_longitude'].toString()) ?? 0.0;
-
-      final distance = Geolocator.distanceBetween(lat, lng, locLat, locLng);
-      // Removed radius requirement -> always associate to the *closest* recognized location
-      if (distance < minDistance) {
-        minDistance = distance;
-        closest = loc;
+    for (var building in _buildings) {
+      final bLat = building['lat'] as double;
+      final bLng = building['lng'] as double;
+      final distance = Geolocator.distanceBetween(lat, lng, bLat, bLng);
+      if (distance <= 40) {
+        matched = {'location_name': building['name']};
+        break;
       }
     }
 
     if (mounted) {
       setState(() {
-        _matchedLocation = closest;
+        _matchedLocation = matched;
       });
+
+      // Move the map to match the new coordinates!
+      try {
+        _mapController.move(LatLng(lat, lng), _mapController.camera.zoom);
+      } catch (e) {
+        // MapController might not be ready yet
+      }
     }
   }
 
@@ -175,8 +195,8 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
         m.spawnLatitude,
         m.spawnLongitude,
       );
-      // Removed spawn radius requirement -> detects closest monster
-      if (distance < minDistance) {
+      // Only detect monsters within their spawn radius
+      if (distance <= m.spawnRadiusMeters && distance < minDistance) {
         foundMonster = m;
         foundDistance = distance;
         minDistance = distance;
@@ -262,6 +282,9 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
     if (_detectedMonster == null) return const SizedBox.shrink();
 
     final locName = _matchedLocation?['location_name'] ?? 'Unknown Location';
+    final distanceStr = _detectedMonsterDistance != null
+        ? "${_detectedMonsterDistance!.toStringAsFixed(1)} m away"
+        : "";
 
     return Container(
       margin: const EdgeInsets.only(top: 24),
@@ -273,23 +296,23 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _detectedMonster!.monsterName,
-            style: const TextStyle(
-              fontSize: 22,
+          const Text(
+            "Monster detected near you!",
+            style: TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Color(0xFF386641),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Type: ${_detectedMonster!.monsterType}",
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
           ),
           const SizedBox(height: 12),
           Text(
-            "Found a monster in this location -> $locName",
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            "${_detectedMonster!.monsterName} (${_detectedMonster!.monsterType}) - $distanceStr",
+            style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "Location - $locName",
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 24),
           Center(
@@ -350,19 +373,53 @@ class _CatchMonsterPageState extends State<CatchMonsterPage> {
                         clipBehavior: Clip.hardEdge,
                         child: FlutterMap(
                           mapController: _mapController,
-                          options: MapOptions(
-                            initialCenter: const LatLng(15.144985, 120.588702),
+                          options: const MapOptions(
+                            initialCenter: LatLng(15.133103, 120.590585),
                             initialZoom: 16.0,
-                            interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
-                            onTap: (tapPosition, point) {
-                              _latController.text = point.latitude.toStringAsFixed(6);
-                              _lngController.text = point.longitude.toStringAsFixed(6);
-                            },
+                            interactionOptions: InteractionOptions(flags: InteractiveFlag.none),
                           ),
                           children: [
                             TileLayer(
                               urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                               userAgentPackageName: "com.example.haumonsters",
+                            ),
+                            // Building zone circles (40m radius, blue)
+                            CircleLayer(
+                              circles: _buildings.map((b) => CircleMarker(
+                                point: LatLng(b['lat'] as double, b['lng'] as double),
+                                radius: 40,
+                                useRadiusInMeter: true,
+                                color: Colors.blue.withOpacity(0.10),
+                                borderColor: Colors.blue.shade600,
+                                borderStrokeWidth: 1.2,
+                              )).toList(),
+                            ),
+                            // Building name markers (small icon + label)
+                            MarkerLayer(
+                              markers: _buildings.map((b) => Marker(
+                                point: LatLng(b['lat'] as double, b['lng'] as double),
+                                width: 56,
+                                height: 36,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.location_city, color: Colors.blue.shade800, size: 14),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade800.withOpacity(0.85),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: Text(
+                                        b['name'] as String,
+                                        style: const TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )).toList(),
                             ),
                             if (_monsters.isNotEmpty)
                               CircleLayer(

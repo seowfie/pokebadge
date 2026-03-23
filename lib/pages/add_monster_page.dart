@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,22 +18,56 @@ class _AddMonsterPageState extends State<AddMonsterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _monsterNameController = TextEditingController();
   final TextEditingController _monsterTypeController = TextEditingController();
-  final TextEditingController _radiusController = TextEditingController(text: '100');
+  final TextEditingController _radiusController = TextEditingController(text: '10');
   final MapController _mapController = MapController();
   final ImagePicker _imagePicker = ImagePicker();
-  LatLng _selectedPoint = const LatLng(15.144985, 120.588702);
+  // Start at CHAPEL
+  LatLng _selectedPoint = const LatLng(15.132142, 120.589501);
   File? _selectedImage;
   bool _isSaving = false;
   bool _isUploadingImage = false;
   bool _isPickingImage = false;
   bool _isGettingLocation = false;
+  String? _selectedBuildingName = 'CHAPEL';
 
-  double get _radiusMeters => double.tryParse(_radiusController.text.trim()) ?? 100.0;
+  final _random = Random();
+
+  // Same building list as catch_monster_page
+  static const List<Map<String, dynamic>> _buildings = [
+    {'name': 'St. Martha Hall', 'lat': 15.133576, 'lng': 120.591420},
+    {'name': 'SFJ',             'lat': 15.133271, 'lng': 120.591094},
+    {'name': 'STL',             'lat': 15.132660, 'lng': 120.590788},
+    {'name': 'PGN',             'lat': 15.132654, 'lng': 120.590263},
+    {'name': 'APS',             'lat': 15.131826, 'lng': 120.589936},
+    {'name': 'MGN',             'lat': 15.133208, 'lng': 120.589979},
+    {'name': 'SJH',             'lat': 15.132701, 'lng': 120.589073},
+    {'name': 'CHAPEL',          'lat': 15.132142, 'lng': 120.589501},
+    {'name': 'GGN',             'lat': 15.131748, 'lng': 120.590675},
+    {'name': 'Covered Court',   'lat': 15.131412, 'lng': 120.589191},
+  ];
+
+  double get _radiusMeters => double.tryParse(_radiusController.text.trim()) ?? 10.0;
+
+  /// Returns a random LatLng within [radiusMeters] of [center]
+  LatLng _randomPointInRadius(double centerLat, double centerLng, double radiusMeters) {
+    final angle = _random.nextDouble() * 2 * pi;
+    final distance = sqrt(_random.nextDouble()) * radiusMeters; // uniform in circle
+    final latOffset = distance / 111111;
+    final lngOffset = distance / (111111 * cos(centerLat * pi / 180));
+    return LatLng(
+      centerLat + latOffset * cos(angle),
+      centerLng + lngOffset * sin(angle),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _setInitialLocation();
+    // Do NOT call _setInitialLocation here anymore, as it overwrites our Chapel default with device GPS.
+    // Instead, just ensure the map is centered on our default point.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapController.move(_selectedPoint, 17);
+    });
   }
 
   Future<void> _setInitialLocation() async {
@@ -267,6 +302,36 @@ class _AddMonsterPageState extends State<AddMonsterPage> {
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
+              // Building selector dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedBuildingName,
+                decoration: const InputDecoration(
+                  labelText: "Place at Building (optional)",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+                hint: const Text("Tap map or select a building"),
+                items: [
+                  ..._buildings.map((b) => DropdownMenuItem<String>(
+                    value: b['name'] as String,
+                    child: Text(b['name'] as String),
+                  )),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  final building = _buildings.firstWhere((b) => b['name'] == value);
+                  final bLat = building['lat'] as double;
+                  final bLng = building['lng'] as double;
+                  // Random point within the building's 40m zone
+                  final point = _randomPointInRadius(bLat, bLng, 40);
+                  setState(() {
+                    _selectedBuildingName = value;
+                    _selectedPoint = point;
+                  });
+                  _mapController.move(point, 17);
+                },
+              ),
+              const SizedBox(height: 16),
               SizedBox(
                 height: 400,
                 child: ClipRRect(
@@ -287,15 +352,27 @@ class _AddMonsterPageState extends State<AddMonsterPage> {
                         urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                         userAgentPackageName: "com.example.haumonsters",
                       ),
+                      // Building zone reference circles (blue, 40m)
+                      CircleLayer(
+                        circles: _buildings.map((b) => CircleMarker(
+                          point: LatLng(b['lat'] as double, b['lng'] as double),
+                          radius: 40,
+                          useRadiusInMeter: true,
+                          color: Colors.blue.withOpacity(0.10),
+                          borderColor: Colors.blue.shade400,
+                          borderStrokeWidth: 1.5,
+                        )).toList(),
+                      ),
+                      // Selected spawn radius circle
                       CircleLayer(
                         circles: [
                           CircleMarker(
                             point: _selectedPoint,
                             radius: _radiusMeters,
                             useRadiusInMeter: true,
-                            color: Colors.blue.withOpacity(0.2),
+                            color: Colors.red.withOpacity(0.2),
                             borderStrokeWidth: 2,
-                            borderColor: Colors.blue,
+                            borderColor: Colors.red,
                           ),
                         ],
                       ),
